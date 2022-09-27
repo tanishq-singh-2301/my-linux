@@ -2,32 +2,44 @@
 
 echo "Installing all the packages"
 
+home=$(pwd)
+bash_file=~/.bashrc
+
+# Checking if package is installed else install it
+function checkOrInstall(){
+	REQUIRED_PKG=$1
+    PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "Already Installed")
+
+	echo Checking for $REQUIRED_PKG: $PKG_OK
+
+	if [ "" = "$PKG_OK" ]; then
+		echo "No $REQUIRED_PKG. Setting up $REQUIRED_PKG."
+		sudo apt install -y $REQUIRED_PKG
+	fi
+}
+
+# Find dir of python3 packages
+function searchPythonPackages(){
+	python_version=$(python3 --version)
+	packages=($(find / 2> /dev/null | grep $1))
+	
+	for package in ${packages[@]}
+	do
+		if [[ "$package" == *"${python_version:7}"* ]]; then
+			echo $package
+		fi
+    done
+}
+
 sudo apt update
 
-# Installing node version manager (nvm)
-curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
-
-source ~/.profile
-nvm install latest
-
-sudo apt install -yq libwebkit2gtk-4.0-dev \
-	build-essential
-	libssl-dev
-	libgtk-3-dev
-	libayatana-appindicator3-dev
-	librsvg2-dev
-
-curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
-
-# yarn and pnpm
-npm i -g yarn pnpm
-
-# Deno
-sudo apt install unzip
-curl -fsSL https://deno.land/install.sh | sh
-
-# Vim
-sudo apt install vim
+checkOrInstall python3
+checkOrInstall wget
+checkOrInstall curl
+checkOrInstall git
+checkOrInstall vim
+checkOrInstall unzip
+checkOrInstall python3-pip 
 
 # neovim
 wget https://github.com/neovim/neovim/releases/download/v0.7.2/nvim-linux64.deb
@@ -35,11 +47,7 @@ sudo apt install -y ./nvim-linux64.deb
 
 rm -r nvim-linux64.deb
 
-# Git
-sudo apt install git
-
 # powerline
-sudo apt install -y python3-pip
 pip3 install --user powerline-status
 pip3 install powerline-gitstatus
 
@@ -56,6 +64,21 @@ git clone --depth 1 https://gist.github.com/03a4e4eb58038e9e683b1f839fd63250.git
 mv my-shell-scheme/my-powerline-shell-theme.json default.json
 sudo rm -r my-shell-scheme
 
-cd ~/
+cd $home
 
-source .bashrc
+powerline_sh="$(searchPythonPackages 'bash/powerline.sh')"
+powerline_daemon=$"(searchPythonPackages 'bin/powerline-daemon')"
+
+powerline_daemon_loc=${powerline_daemon%"powerline-daemon"*}
+
+echo '' >> $bash_file
+echo '' >> $bash_file
+echo '# Powerline' >> $bash_file
+echo 'export PATH="$PATH:'$powerline_daemon_loc'"' >> $bash_file
+echo 'export LC_ALL=en_US.UTF-8' >> $bash_file
+echo 'powerline-daemon -q' >> $bash_file
+echo 'POWERLINE_BASH_CONTINUATION=1' >> $bash_file
+echo 'POWERLINE_BASH_SELECT=1' >> $bash_file
+echo 'source' $powerline_sh >> $bash_file
+
+source ~/.bashrc
