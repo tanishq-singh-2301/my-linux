@@ -21,7 +21,7 @@ function checkOrInstall(){
 # Find dir of python3 packages
 function searchPythonPackages(){
 	python_version=$(python3 --version)
-	packages=($(find / 2> /dev/null | grep $1))
+	packages=($(find / ! \( -path /mnt -prune \) -type $2 2> /dev/null | grep $1))
 	
 	for package in ${packages[@]}
 	do
@@ -40,6 +40,7 @@ checkOrInstall git
 checkOrInstall vim
 checkOrInstall unzip
 checkOrInstall python3-pip 
+checkOrInstall grep
 
 # neovim
 wget https://github.com/neovim/neovim/releases/download/v0.7.2/nvim-linux64.deb
@@ -66,8 +67,8 @@ sudo rm -r my-shell-scheme
 
 cd $home
 
-powerline_sh="$(searchPythonPackages 'bash/powerline.sh')"
-powerline_daemon="$(searchPythonPackages 'bin/powerline-daemon')"
+powerline_sh="$(searchPythonPackages 'bash/powerline.sh' 'f')"
+powerline_daemon="$(searchPythonPackages 'bin/powerline-daemon' 'f')"
 
 powerline_daemon_loc=${powerline_daemon%"powerline-daemon"*}
 
