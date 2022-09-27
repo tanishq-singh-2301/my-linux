@@ -7,24 +7,25 @@ bash_file=~/.bashrc
 
 # Checking if package is installed else install it
 function checkOrInstall(){
-    PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $1)
+    PKG_NAME=$1
+    PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $PKG_NAME)
 
 	if [ "install ok installed" != "$PKG_OK" ]; then
-		echo "No $1. Setting up $1."
-		sudo apt install -y $1
+		echo "No $PKG_NAME. Setting up $PKG_NAME."
+		sudo apt install -y $PKG_NAME
 	fi
 }
 
 # Find dir of python3 packages
 function searchPythonPackages(){
+    to_find=$1
+    type=$2
 	python_version=$(python3 --version)
-	declare -a packages=($(find / ! \( -path /mnt -prune \) -type $2 2> /dev/null | grep $1))
+	declare -a packages=($(find / ! \( -path /mnt -prune \) -type $type 2> /dev/null | grep $to_find))
 
-    echo ${packages[@]}
-	
 	for package in ${packages[@]}
 	do
-		if [[ "$package" == *"${python_version:7}"* ]]; then
+		if [[ "$package" == *"${python_version:7:3}"* ]] || [[ "$package" == *"python"* ]] || [[ "$package" == *"Python"* ]]; then
 			echo "$package"
 		fi
     done
@@ -40,18 +41,6 @@ checkOrInstall vim
 checkOrInstall unzip
 checkOrInstall python3-pip 
 checkOrInstall grep
-
-# neovim
-
-NVIM_PKG_OK=$(dpkg-query -W --showformat='${Status}\n' nvim)
-
-if [ "install ok installed" != "$NVIM_PKG_OK" ]; then
-	echo "No $1. Setting up $1."
-	wget https://github.com/neovim/neovim/releases/download/v0.7.2/nvim-linux64.deb
-	sudo apt install -y ./nvim-linux64.deb
-
-	rm -r nvim-linux64.deb
-fi
 
 # powerline
 pip3 install --user powerline-status
