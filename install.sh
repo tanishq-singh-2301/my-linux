@@ -67,7 +67,7 @@ sudo rm -r my-shell-scheme
 cd $home
 
 powerline_sh="$(searchPythonPackages 'bash/powerline.sh')"
-powerline_daemon=$"(searchPythonPackages 'bin/powerline-daemon')"
+powerline_daemon="$(searchPythonPackages 'bin/powerline-daemon')"
 
 powerline_daemon_loc=${powerline_daemon%"powerline-daemon"*}
 
